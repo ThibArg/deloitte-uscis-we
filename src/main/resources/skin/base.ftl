@@ -2,7 +2,7 @@
 <head>
   <title>
      <@block name="title">
-     USCIS Application
+     USCIS Vita Application
      </@block>
   </title>
   <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
@@ -17,7 +17,7 @@
 <body style="margin:0px 0px 0px 0px;">
 
   <div class="header" id="uscisHeader">
-    <img src="${skinPath}/img/deloitte-logox32.png"><span style="padding-left: 20px;vertical-align: super;">USCIS Application</span>
+    <img src="${skinPath}/img/deloitte-logox32.png"><span style="padding-left: 20px;vertical-align: super;">USCIS Vita Application</span>
   </div
 
   <div>

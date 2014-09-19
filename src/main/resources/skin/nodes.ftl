@@ -10,9 +10,7 @@ to prefill values
 <#else>
 	<p class="infoHeader">Hi ${Context.getProperty("currentUser")}, we need to know a little more about you.</p>
 </#if>
-	<p><span class="infoText">My name is </span><input type="text" class="infoField" name="ad:firstName" value="${Document['ad:firstName']}" placeHolder="first name" required /><span class="infoText"> and </span><input type="text" class="infoField" name="ad:lastName" value="${Document['ad:lastName']}" placeHolder="last name" required /><span class="infoText">.</span></p>
-	<p><span class="infoText">My address is </span><textarea class="infoTextAreaField" name="ad:address" value="${Document['ad:address']}" placeHolder="address" rows="2" required>${Document['ad:address']}</textarea><span class="infoText">.</span></p>
-	<p><span class="infoText">My gender is </span><input type="text" class="infoField" style="width:200px" name="ad:gender" value="${Document['ad:gender']}" placeHolder="M or F" maxlength="1" pattern="M|F" required /></p>
+	<p><span class="infoText">My name is </span><input type="text" class="infoField" name="ad:firstName" value="${Document['ad:firstName']}" placeHolder="first name" required /><span class="infoText"> and </span><input type="text" class="infoField" name="ad:lastName" value="${Document['ad:lastName']}" placeHolder="last name" required /><span class="infoText">, my address is </span><input type="text" class="infoText" name="ad:address" value="${Document['ad:address']}" placeHolder="address" required /><span class="infoText">, and my gender is </span><input type="text" class="infoField" style="width:200px" name="ad:gender" value="${Document['ad:gender']}" placeHolder="M or F" maxlength="1" pattern="M|F" required /></p>
 </div>
 
 <!-- Relative details -->
