@@ -17,9 +17,6 @@
 
 package org.nuxeo.deloitte;
 
-import java.text.SimpleDateFormat;
-import java.util.GregorianCalendar;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -52,30 +49,16 @@ public class DeloitteRoot extends ModuleRoot {
         ctx.setProperty("currentUser", ctx.getPrincipal().getName());
         // get the applicant_data doc
         DocumentModel theDoc = getApplicantDataDoc();
-        // Update some specific values
-        ctx.setProperty("spouseDateOfBirthMMDDYYYY", "");
+        // Specific values
         if(theDoc != null) {
-            GregorianCalendar theDate = (GregorianCalendar) theDoc.getPropertyValue("ad:spouseDateOfBirth");
-            if(theDate != null) {
-                SimpleDateFormat mmddyy = new SimpleDateFormat("MM/dd/yyyy");
-                ctx.setProperty("spouseDateOfBirthMMDDYYYY", mmddyy.format(theDate.getTime()));
-            }
-        }
-        return getView("index").arg("Document", DocumentFactory.newDocument(ctx, theDoc));
-    }
 
-    @Override
-    protected void initialize(Object... arg) {
-/*
-        DocumentModel theDoc = getApplicantDataDoc();
-
-        ctx.setProperty("found", false);
-        ctx.setProperty("docUid", "");
-        if(theDoc != null) {
-            ctx.setProperty("found", true);
-            ctx.setProperty("docUid",theDoc.getId());
         }
-*/
+
+        if(theDoc == null) {
+            return getView("appDataNotFound");
+        } else {
+            return getView("index").arg("Document", DocumentFactory.newDocument(ctx, theDoc));
+        }
     }
 
     protected DocumentModel getApplicantDataDoc() {
@@ -84,8 +67,7 @@ public class DeloitteRoot extends ModuleRoot {
 
         String currentUser = session.getPrincipal().getName();
         ctx.setProperty("currentUser", currentUser);
-
-        DocumentModelList docs = session.query("SELECT * FROM applicant_data WHERE ad:user ='" + currentUser + "'");
+        DocumentModelList docs = session.query("SELECT * FROM applicant_data WHERE ad:user ='" + currentUser + "' AND ecm:currentLifeCycleState != 'deleted'");
         if(docs.size() > 0) {
             theDoc = docs.get(0);
         }

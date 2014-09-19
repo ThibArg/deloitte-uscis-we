@@ -4,6 +4,7 @@
 
 .header {
 	padding: 5px;
+	padding-left: 15px;
 	font-size: 24px;
 	vertical-align:middle;
 	border-bottom-style: solid;
@@ -32,6 +33,13 @@
 	color: white;
 	background-color: #8ec250;
 	font-size: 36px;
+}
+
+.appDataNotFound {
+	margin: 100px;
+	padding: 50px;
+	color: yellow;
+	
 }
 
 body, html {

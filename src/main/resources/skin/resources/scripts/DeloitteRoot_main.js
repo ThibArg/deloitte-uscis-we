@@ -2,7 +2,7 @@
 
 */
 // ==============================
-var kDEBUG = true;
+var kDEBUG = false;
 // ==============================
 var kWORKFLOW_SCHEMA_PREFIX = "var_wf_i129f",
 	kAPPLICANTDATA_SCHEMA_PREFIX = "ad";
@@ -88,27 +88,27 @@ function getCurrentTaskIdAndUpdate() {
 	so the browser does not try to submit the form
 */
 function OnSubmitForm() {
+	var val, inputs, wfVarAssign;
+
+	var boolStrFields = ["spouseMarriedBeforeBool", "spouseHasChildrenBool"];
+
 	// Get all inputs for the dive
-	var inputs = jQuery("form#mainForm div#Task4739 :input");
-	/*
-	var wfVarAssign = "";
-	inputs.each(function(){
-		var input = $(this),
-			fieldName = input.attr("name").replace("ad:", "");
-		wfVarAssign += fieldName + "=" + input.val() + "\r\n";
-	});
-	wfVarAssign += "spouseChildrenNames=[]\r\n";
-	*/
+	inputs = jQuery("form#mainForm div#" + gCurrentTaskId + " :input");
 	
-	
-	var wfVarAssign = {};
+	wfVarAssign = {};
 	inputs.each(function(){
 		var input = $(this),
 			fieldName = input.attr("name").replace("ad:", "");
 		wfVarAssign[fieldName] = input.val();
 	});
-	wfVarAssign["spouseChildrenNames"] = [];
-	console.log(JSON.stringify(wfVarAssign));
+
+	// Handle specific cases (convert bool-striongs to real booleans)
+	boolStrFields.forEach(function(inField) {
+		if(inField in wfVarAssign) {
+			val = wfVarAssign[inField];
+			wfVarAssign[inField] = (val.toLowerCase() === "yes" || val.toLowerCase() == "y");
+		}
+	});
 	
 	gNuxeoClient.operation("REST_completeTask")
 				.context({	"applicantDataDocId": gMainDocId,
