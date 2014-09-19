@@ -50,8 +50,11 @@ public class DeloitteRoot extends ModuleRoot {
         // get the applicant_data doc
         DocumentModel theDoc = getApplicantDataDoc();
         // Specific values
+        ctx.setProperty("personalPhotoUrl", "");
         if(theDoc != null) {
-
+            if(theDoc.getPropertyValue("ad:personalPhoto") != null) {
+                ctx.setProperty("personalPhotoUrl", ctx.getServerURL() + "/nuxeo/nxfile/default/" + theDoc.getId() + "/ad:personalPhoto/");
+            }
         }
 
         if(theDoc == null) {

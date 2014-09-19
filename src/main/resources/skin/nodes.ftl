@@ -10,7 +10,7 @@ to prefill values
 <#else>
 	<p class="infoHeader">Hi ${Context.getProperty("currentUser")}, we need to know a little more about you.</p>
 </#if>
-	<p><span class="infoText">My name is </span><input type="text" class="infoField" name="ad:firstName" value="${Document['ad:firstName']}" placeHolder="first name" required /><span class="infoText"> and </span><input type="text" class="infoField" name="ad:lastName" value="${Document['ad:lastName']}" placeHolder="last name" required /><span class="infoText">, my address is </span><input type="text" class="infoText" name="ad:address" value="${Document['ad:address']}" placeHolder="address" required /><span class="infoText">, and my gender is </span><input type="text" class="infoField" style="width:200px" name="ad:gender" value="${Document['ad:gender']}" placeHolder="M or F" maxlength="1" pattern="M|F" required /></p>
+	<p><span class="infoText">My name is </span><input type="text" class="infoField" name="ad:firstName" value="${Document['ad:firstName']}" placeHolder="first name" required /><span class="infoText"> and </span><input type="text" class="infoField" name="ad:lastName" value="${Document['ad:lastName']}" placeHolder="last name" required /><span class="infoText">, my address is </span><input type="text" class="infoField" style="width: 700px; font-size:smaller;" name="ad:address" value="${Document['ad:address']}" placeHolder="address" required /><span class="infoText">, and my gender is </span><input type="text" class="infoField" style="width:200px" name="ad:gender" value="${Document['ad:gender']}" placeHolder="M or F" maxlength="1" pattern="M|F" required /></p>
 </div>
 
 <!-- Relative details -->
@@ -68,7 +68,9 @@ to prefill values
 
 <!-- Attachments -->
 <div id="Task5261" class="noDisplay node">
-	<p></p>
-	<p>This is node #Task5261</p>
-	<p></p>
+	<p class="infoHeader">${Document['ad:firstName']}, we are almost done.</p>
+	<p><span class="infoText">Here is my personnal photo</span></p>
+	<p><img id="photo" src="${Context.getProperty('personalPhotoUrl')}" alt="your photo here" style="width: 128px; height: 128px; font-size:initial" /></p>
+	<p><a href="javascript:displayFileChooser();" style="color: white">Load a Picture of you</a><input id="uploadPhoto" type="file" accept="image/*" onchange="handleFiles(this.files)" style="visibility:hidden;position:absolute;top:-50;left:-50" /></p>
+	<p id="selectedPhotoFile" style="font-size:smaller"></p>
 </div>

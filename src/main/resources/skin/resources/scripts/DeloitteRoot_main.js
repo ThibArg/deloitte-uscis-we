@@ -5,14 +5,16 @@
 var kDEBUG = false;
 // ==============================
 var kWORKFLOW_SCHEMA_PREFIX = "var_wf_i129f",
-	kAPPLICANTDATA_SCHEMA_PREFIX = "ad";
+	kAPPLICANTDATA_SCHEMA_PREFIX = "ad",
+	kUPLOAD_PHOTO_TASK_ID = "Task5261";
 
 var gMainDocId = "",
 	gCurrentUser = "",
 	gDocData,
 	gCurrentTaskId,
 	gAllDivs,
-	gNuxeoClient;
+	gNuxeoClient,
+	gPhotoFile;
 
 // This is called when the page loads
 function doInit(docId, inUser) {
@@ -81,6 +83,36 @@ function getCurrentTaskIdAndUpdate() {
 				});
 }
 
+function submitPhoto() {
+	var nxClient, batchId;
+	if(gPhotoFile instanceof File) {
+		/*
+		var xhr = new XMLHttpRequest();
+		xhr.open("POST", $id("upload").action, true);
+		xhr.setRequestHeader("X_FILENAME", file.name);
+		xhr.send(gPhotoFile);
+		*/
+		batchId = Math.random();
+		nxClient = new nuxeo.Client();
+		gNuxeoClient.header("X-Batch-Id", batchId)
+					.header("X-File-Idx", 1)
+					.header("X-File-Name", gPhotoFile.name)
+					.header("X-File-Size", gPhotoFile.size)
+					.header("X-File-Type", gPhotoFile.type)
+					.header("Content-Type", "binary/octet-stream")
+					.request("")
+					.path("batch/upload")
+					.post({data: gPhotoFile}, function(inErr, inData) {
+						console.log("Error: " + inErr);
+					});
+
+	} else {
+		if(jQuery("#photo").attr("src") == "") {
+			alert("Please, upload a photo");
+		}
+	}
+}
+
 /*	Handle submission of the form.
 	At this step, validation of required field has been performed by the browser.
 	We get the values to send to a chain which will complete the task
@@ -88,10 +120,14 @@ function getCurrentTaskIdAndUpdate() {
 	so the browser does not try to submit the form
 */
 function OnSubmitForm() {
-	var val, inputs, wfVarAssign;
+	var val,
+		inputs,
+		wfVarAssign,
+		boolStrFields = ["spouseMarriedBeforeBool", "spouseHasChildrenBool"];
 
-	var boolStrFields = ["spouseMarriedBeforeBool", "spouseHasChildrenBool"];
-
+	if(gCurrentTaskId === kUPLOAD_PHOTO_TASK_ID) {
+		submitPhoto();
+	} else {
 	// Get all inputs for the dive
 	inputs = jQuery("form#mainForm div#" + gCurrentTaskId + " :input");
 	
@@ -121,9 +157,26 @@ function OnSubmitForm() {
 						window.location.reload(true);
 					}
 				});
+	}
 
 	return false;
 }
+
+function displayFileChooser() {
+    jQuery('#uploadPhoto').click();
+}
+
+function handleFiles(files) {
+	//The input file is not set to allow multiple files, so we have just one
+	if(files.length > 0) {
+		gPhotoFile = files[0];
+		jQuery("#selectedPhotoFile").text("Selected: " + gPhotoFile.name);
+	} else {
+		gPhotoFile = null;
+		jQuery("#selectedPhotoFile").html("Selected: <i>None</i>");
+	}
+}
+
 
 
 /* EOF */
