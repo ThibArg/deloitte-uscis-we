@@ -1,0 +1,10 @@
+Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: .
+Manifest-Version: 1.0
+Bundle-Name: deloitte-uscis-we
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Bundle-Vendor: Nuxeo
+Bundle-Version: 5.9.6.qualifier
+Bundle-ManifestVersion: 2
+Bundle-SymbolicName: deloitte-uscis-we
+Nuxeo-WebModule: org.nuxeo.ecm.webengine.app.WebEngineModule;name=uscisform;extends=base;package=org/nuxeo/deloitte
