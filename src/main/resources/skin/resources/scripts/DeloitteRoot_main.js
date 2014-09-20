@@ -10,10 +10,8 @@ var kWORKFLOW_SCHEMA_PREFIX = "var_wf_i129f",
 
 var gMainDocId = "",
 	gCurrentUser = "",
-	gDocData,
 	gCurrentTaskId,
 	gAllDivs,
-	gNuxeoClient,
 	gPhotoFile;
 
 // This is called when the page loads
@@ -29,7 +27,8 @@ jQuery(document).ready(function() {
 		console.log("The current user is: " + gCurrentUser);
 	}
 
-	var allDivs, oneDiv,
+	var nxClient,
+		allDivs, oneDiv,
 		i, max;
 
 	// Get all the divs to use, as jQuery objects
@@ -42,35 +41,26 @@ jQuery(document).ready(function() {
 		gAllDivs[ oneDiv.id ] = jQuery(oneDiv);
 	}
 
-	// Request Nuxeo to get the whole document
-	// No credentials passed here: If we are in this page, the user is authenticated
-	gNuxeoClient = new nuxeo.Client();
-	gNuxeoClient.schema("dublincore")
-				.schema("applicant_data")
-				.request("id/" + gMainDocId)
-				.get(function(inErr, inData) {
-					if(inErr != null) {
-						gDocData = {};
-					} else {
-						gDocData = inData;
-						// Now, get the current workflow task id
-						getCurrentTaskIdAndUpdate();
-					}
-				});
-});
-
-function getCurrentTaskIdAndUpdate() {
-	gNuxeoClient.operation("REST_getCurrentTaskId")
-				.context({"applicantDataDocId": gMainDocId})
-				.execute(function(inErr2, inData2) {
-					// Should add some error checking here
-					gCurrentTaskId = JSON.parse(inData2).taskId;
+	// Request Nuxeo to get the current task, and handle
+	// this task (basically, show it and remove the others)
+	// No credentials needed: If we are in this page, the user is authenticated
+	nxClient = new nuxeo.Client();
+	// We just call our REST_getCurrentTaskId Automation Chain, passing it the
+	// doc id. The chain returns the current task id.
+	nxClient.operation("REST_getCurrentTaskId")
+			.context({"applicantDataDocId": gMainDocId})
+			.execute(function(inErr, inData) {
+				if(inErr) {
+					displayRestError("Get the current task", inErr);
+				} else {
+					gCurrentTaskId = JSON.parse(inData).taskId;
 					gAllDivs[gCurrentTaskId].removeClass("noDisplay");
 					// And delete all the other ones, so submiting the form => no complain
 					// about non focusable, non entered fields, etc.)
 					Object.keys(gAllDivs).forEach(function(oneKey) {
 						if(oneKey != gCurrentTaskId) {
 							gAllDivs[oneKey].remove();
+							delete gAllDivs[oneKey];
 						}
 					});
 					if(kDEBUG) {
@@ -82,7 +72,44 @@ function getCurrentTaskIdAndUpdate() {
 							debugSpan.text("Current task: " + gCurrentTaskId);
 						}
 					}
-				});
+				}
+			});
+});
+
+function completeTask(inWFVariables) {
+	var nxClient;
+
+	nxClient = new nuxeo.Client();
+	nxClient.operation("REST_completeTask")
+			.context({	"applicantDataDocId": gMainDocId,
+						"taskId": gCurrentTaskId,
+						"wfValues": inWFVariables})
+			.execute(function(inErr, inData) {
+				if(inErr) {
+					displayRestError("Complete the current task", inErr);
+				} else {
+					window.location.reload(true);
+				}
+			});
+}
+
+function displayRestError(inContextLabel, inTheErr) {
+	var html = "";
+
+	// Delete all divs
+	Object.keys(gAllDivs).forEach(function(oneKey) {
+		gAllDivs[oneKey].remove();
+		delete gAllDivs[oneKey];
+	});
+	// Fill in the error div
+	html += "<p>An error occured while requesting the server</p>"
+			+ "<p>\"" + inContextLabel + "\"</p>"
+			+ "<p>" + JSON.stringify(inTheErr) + "</p>";
+	jQuery("#restError").html(html);
+	jQuery("#restError").removeClass("noDisplay");
+	// Remove the submit button
+	jQuery("#nextStepButton").remove();
+	// Should add something to let the user relod or test something else...
 }
 
 /*
@@ -106,7 +133,11 @@ function batchFinished(batchId) {
 	nxClient = new nuxeo.Client();
 	nxClient.request("id/" + gMainDocId)
 			.put({data: theData}, function(inErr, inData) {
-				console.log("inErr: " + inErr);
+				if(inErr) {
+					displayRestError("Save picture in applicant data", inErr);
+				} else {
+					// MOVE TO NEXT STEP
+				}
 			});
 }
 /*
@@ -139,12 +170,18 @@ function submitPhoto() {
 					batchFinishedCallback: batchFinished
 				})
 				.uploadFile(gPhotoFile, function(inErr, inDada) {
-					// Unused. We use the batchFinished callback
+					if(inErr) {
+						displayRestError("Upload file", inErr);
+					} else {
+						// Unused. We use the batchFinished callback
+					}
 				});
 
 	} else {
 		if(jQuery("#photo").attr("src") == "") {
 			alert("Please, upload a photo");
+		} else {
+			alert("all good");
 		}
 	}
 }
@@ -154,45 +191,55 @@ function submitPhoto() {
 	We get the values to send to a chain which will complete the task
 	Also, we return false, as this function is called for the "onsubmit" action of the form,
 	so the browser does not try to submit the form
+
+	Also we have to handle special cases:
+		-> Boolean values
+		-> Photo upload
 */
 function OnSubmitForm() {
 	var val,
 		inputs,
 		wfVarAssign,
+		nxClient,
 		boolStrFields = ["spouseMarriedBeforeBool", "spouseHasChildrenBool"];
 
 	if(gCurrentTaskId === kUPLOAD_PHOTO_TASK_ID) {
 		submitPhoto();
 	} else {
-	// Get all inputs for the dive
-	inputs = jQuery("form#mainForm div#" + gCurrentTaskId + " :input");
-	
-	wfVarAssign = {};
-	inputs.each(function(){
-		var input = $(this),
-			fieldName = input.attr("name").replace("ad:", "");
-		wfVarAssign[fieldName] = input.val();
-	});
+		// Get all inputs for the dive
+		inputs = jQuery("form#mainForm div#" + gCurrentTaskId + " :input");
+		
+		wfVarAssign = {};
+		inputs.each(function(){
+			var input = $(this),
+				fieldName = input.attr("name").replace("ad:", "");
+			wfVarAssign[fieldName] = input.val();
+		});
 
-	// Handle specific cases (convert bool-striongs to real booleans)
-	boolStrFields.forEach(function(inField) {
-		if(inField in wfVarAssign) {
-			val = wfVarAssign[inField];
-			wfVarAssign[inField] = (val.toLowerCase() === "yes" || val.toLowerCase() == "y");
-		}
-	});
-	
-	gNuxeoClient.operation("REST_completeTask")
+		// Handle specific cases (convert bool-striongs to real booleans)
+		boolStrFields.forEach(function(inField) {
+			if(inField in wfVarAssign) {
+				val = wfVarAssign[inField];
+				wfVarAssign[inField] = (val.toLowerCase() === "yes" || val.toLowerCase() == "y");
+			}
+		});
+
+		completeTask(wfVarAssign);
+		/*
+		nxClient = new nuxeo.Client();
+		nxClient.operation("REST_completeTask")
 				.context({	"applicantDataDocId": gMainDocId,
 							"taskId": gCurrentTaskId,
 							"wfValues": wfVarAssign})
 				.execute(function(inErr, inData) {
 					if(inErr) {
-						alert("Error: " + inErr);
+						displayRestError("Complete the current task", inErr);
 					} else {
 						window.location.reload(true);
 					}
 				});
+		}
+		*/
 	}
 
 	return false;

@@ -105,6 +105,11 @@ body {
 	border: 3px dotted white;
 }
 
+.restError {
+	color: yellow;
+	font-size: 75%;
+}
+
 table.main {
     border: 0px;
     width: 100%;

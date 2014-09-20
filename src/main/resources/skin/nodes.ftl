@@ -3,6 +3,11 @@ Each div **must** use the "noDisplay" and the "node" class. This is required
 In this context, we have the Document instance avilable so we can use any field
 to prefill values
 -->
+<!-- We start with the error div, displayed when a REST request fails -->
+<div id="restError" class="noDisplay restError">
+<!-- content is filled dynamically by the JavaScript -->
+</div>
+
 <!-- Personal_details -->
 <div id="Task4739" class="noDisplay node">
 <#if Document['ad:lastName']?has_content>
@@ -73,4 +78,11 @@ to prefill values
 	<p><img id="photo" src="${Context.getProperty('personalPhotoUrl')}" alt="your photo here" style="width: 128px; height: 128px; font-size:initial" /></p>
 	<p><a href="javascript:displayFileChooser();" style="color: white">Load a Picture of you</a><input id="uploadPhoto" type="file" accept="image/*" onchange="handleFiles(this.files)" style="visibility:hidden;position:absolute;top:-50;left:-50" /></p>
 	<p id="selectedPhotoFile" style="font-size:smaller"></p>
+</div>
+
+<!-- Last step -->
+<div id="lastStep" class="noDisplay">
+	<p class="infoHeader">${Document['ad:firstName']}, your application is complete.</p>
+	<p></p>
+	<p><a href="/nuxeo/nxfile/default/THE_FINAL_DOC_ID/file:content/i-129f.pdf" style="color: white">Download the PDF</a></p>
 </div>
