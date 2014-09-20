@@ -51,7 +51,7 @@ jQuery(document).ready(function() {
 		// Request Nuxeo to get the current task, and handle
 		// this task (basically, show it and remove the others)
 		// No credentials needed: If we are in this page, the user is authenticated
-		nxClient = new nuxeo.Client();
+		nxClient = new nuxeo.Client({timeout: 10000});
 		// We just call our REST_getCurrentTaskId Automation Chain, passing it the
 		// doc id. The chain returns the current task id.
 		nxClient.operation("REST_getCurrentTaskId")
@@ -90,7 +90,7 @@ jQuery(document).ready(function() {
 function completeTask(inWFVariables) {
 	var nxClient;
 
-	nxClient = new nuxeo.Client();
+	nxClient = new nuxeo.Client({timeout: 10000});
 	nxClient.operation("REST_completeTask")
 			.context({	"applicantDataDocId": gMainDocId,
 						"taskId": gCurrentTaskId,
@@ -142,7 +142,7 @@ function batchFinished(batchId) {
 			}
 		}
 	};
-	nxClient = new nuxeo.Client();
+	nxClient = new nuxeo.Client({timeout: 10000});
 	nxClient.request("id/" + gMainDocId)
 			.put({data: theData}, function(inErr, inData) {
 				if(inErr) {
@@ -171,7 +171,7 @@ function submitPhoto() {
 	var nxClient, batchId, xhr;
 	if(gPhotoFile instanceof File) {
 		
-		nxClient = new nuxeo.Client();
+		nxClient = new nuxeo.Client({timeout: 10000});
 		// Using operation("automation") is a big crados hack to fix the fact that the uploader
 		// builds a bad URL: /site/batch/upload, instead of /site/automation/batch/upload
 		// (missing "/automation" in the path). So, because the code concat the operation
@@ -238,7 +238,7 @@ function OnSubmitForm() {
 
 		completeTask(wfVarAssign);
 		/*
-		nxClient = new nuxeo.Client();
+		nxClient = new nuxeo.Client({timeout: 10000});
 		nxClient.operation("REST_completeTask")
 				.context({	"applicantDataDocId": gMainDocId,
 							"taskId": gCurrentTaskId,
@@ -262,13 +262,22 @@ function displayFileChooser() {
 }
 
 function handleFiles(files) {
+	var theReader;
 	//The input file is not set to allow multiple files, so we have just one
 	if(files.length > 0) {
 		gPhotoFile = files[0];
 		jQuery("#selectedPhotoFile").text("Selected: " + gPhotoFile.name);
+		// Display the picture
+		theReader = new FileReader();
+		theReader.readAsDataURL(gPhotoFile);
+		theReader.onload = function (inEvent) {
+			document.getElementById("photo").src = inEvent.target.result;
+		};
+
 	} else {
 		gPhotoFile = null;
 		jQuery("#selectedPhotoFile").html("Selected: <i>None</i>");
+		document.getElementById("photo").src = "";
 	}
 }
 

@@ -68,7 +68,7 @@ to prefill values
 
 <!-- Spouse Children Names -->
 <div id="Task508a" class="noDisplay node">
-	<p class="infoHeader">${Document['ad:firstName']} has children from a previous marriage</p>
+	<p class="infoHeader">${Document['ad:spouseName']} has children from a previous marriage</p>
 	<p><span class="infoText">The names of the children are </span><input type="text" class="infoField" name="ad:spouseKid1" value="${Document['ad:spouseKid1']}" placeHolder="name" required /><span class="infoText">, </span><input type="text" class="infoField" name="ad:spouseKid2" value="${Document['ad:spouseKid2']}" placeHolder="name" /><span class="infoText">, </span><input type="text" class="infoField" name="ad:spouseKid3" value="${Document['ad:spouseKid3']}" placeHolder="name" /></p>
 	<p></p>
 </div>
