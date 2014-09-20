@@ -23,9 +23,11 @@ function doInit(docId, inUser) {
 }
 
 jQuery(document).ready(function() {
-	console.log("Here I am");
-	console.log("The main doc ID is: " + gMainDocId);
-	console.log("The current user is: " + gCurrentUser);
+	if(kDEBUG) {
+		console.log("Here I am");
+		console.log("The main doc ID is: " + gMainDocId);
+		console.log("The current user is: " + gCurrentUser);
+	}
 
 	var allDivs, oneDiv,
 		i, max;
@@ -83,28 +85,62 @@ function getCurrentTaskIdAndUpdate() {
 				});
 }
 
+/*
+function bsc(batchId) {
+	console.log("batchStartedCallback " + batchId);
+}
+*/
+function batchFinished(batchId) {
+	console.log("batchFinishedCallback " + batchId);
+	var theData, nxClient;
+
+	theData = {
+		"entity-type": "document",
+		"properties": {
+			"ad:personalPhoto": {
+					"upload-batch": batchId,
+					"upload-fileId": "0"
+			}
+		}
+	};
+	nxClient = new nuxeo.Client();
+	nxClient.request("id/" + gMainDocId)
+			.put({data: theData}, function(inErr, inData) {
+				console.log("inErr: " + inErr);
+			});
+}
+/*
+function usc(fileIndex, file) {
+	console.log("uploadStartedCallback " + fileIndex + " ••• " + file);
+}
+function ufc(fileIndex, file, time) {
+	console.log("uploadFinishedCallback " + fileIndex + " ••• " + file);
+}
+function upc(fileIndex, file, newProgress) {
+	console.log("uploadProgressUpdatedCallback " + fileIndex + " ••• " + file + " ••• " + newProgress);
+}
+function suc(fileIndex, file, speed) {
+	console.log("uploadSpeedUpdatedCallback " + fileIndex + " ••• " + file + " ••• " + speed);
+}
+*/
+
 function submitPhoto() {
-	var nxClient, batchId;
+	var nxClient, batchId, xhr;
 	if(gPhotoFile instanceof File) {
-		/*
-		var xhr = new XMLHttpRequest();
-		xhr.open("POST", $id("upload").action, true);
-		xhr.setRequestHeader("X_FILENAME", file.name);
-		xhr.send(gPhotoFile);
-		*/
-		batchId = Math.random();
+		
 		nxClient = new nuxeo.Client();
-		gNuxeoClient.header("X-Batch-Id", batchId)
-					.header("X-File-Idx", 1)
-					.header("X-File-Name", gPhotoFile.name)
-					.header("X-File-Size", gPhotoFile.size)
-					.header("X-File-Type", gPhotoFile.type)
-					.header("Content-Type", "binary/octet-stream")
-					.request("")
-					.path("batch/upload")
-					.post({data: gPhotoFile}, function(inErr, inData) {
-						console.log("Error: " + inErr);
-					});
+		// Using operation("automation") is a big crados hack to fix the fact that the uploader
+		// builds a bad URL: /site/batch/upload, instead of /site/automation/batch/upload
+		// (missing "/automation" in the path). So, because the code concat the operation
+		// name in the path, well, we just used the missing value.
+		nxClient.operation("automation")
+				.uploader({
+					directUpload: true,
+					batchFinishedCallback: batchFinished
+				})
+				.uploadFile(gPhotoFile, function(inErr, inDada) {
+					// Unused. We use the batchFinished callback
+				});
 
 	} else {
 		if(jQuery("#photo").attr("src") == "") {

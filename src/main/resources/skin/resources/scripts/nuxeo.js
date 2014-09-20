@@ -178,7 +178,7 @@ var nuxeo = (function(nuxeo) {
       automationURL: this._automationURL,
       username: this._username,
       password: this._password,
-      data: data,
+      data: "data" in options ? options.data : null,
       timeout: this._timeout,
       repositoryName: this._repositoryName,
       headers: this._headers
@@ -758,7 +758,7 @@ var nuxeo = (function(nuxeo) {
     this._numConcurrentUploads = options.numConcurrentUploads;
     this._directUpload = options.directUpload;
     this._uploadRateRefreshTime = options.uploadRateRefreshTime;
-    this._batchStartedCallback = options.batchFinishedCallback;
+    this._batchStartedCallback = options.batchStartedCallback;
     this._batchFinishedCallback = options.batchFinishedCallback;
     this._uploadStartedCallback = options.uploadStartedCallback;
     this._uploadFinishedCallback = options.uploadFinishedCallback;
@@ -975,14 +975,14 @@ var nuxeo = (function(nuxeo) {
       upload.callback(upload.fileIndex, upload.fileObj,
         timeDiff);
     }
-    this._nbUploadInprogress--;
+    this._nbUploadInProgress--;
     if (!this._sendingRequestsInProgress && this._uploadStack.length > 0
-      && this._nbUploadInprogress < this._numConcurrentUploads) {
+      && this._nbUploadInProgress < this._numConcurrentUploads) {
       // restart upload
       log('restart pending uploads');
       this.uploadFiles();
     } else if (this._nbUploadInProgress == 0) {
-      this._batchFinishedCallback(batchId);
+      this._batchFinishedCallback(this.batchId);
     }
   };
 
