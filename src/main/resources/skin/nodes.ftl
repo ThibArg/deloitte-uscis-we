@@ -8,6 +8,8 @@ to prefill values
 <!-- content is filled dynamically by the JavaScript -->
 </div>
 
+<!-- Prepare all the stuff only if the workflow is running -->
+<#if Context.getProperty("workflowIsRunning")>
 <!-- Personal_details -->
 <div id="Task4739" class="noDisplay node">
 <#if Document['ad:lastName']?has_content>
@@ -76,13 +78,14 @@ to prefill values
 	<p class="infoHeader">${Document['ad:firstName']}, we are almost done.</p>
 	<p><span class="infoText">Here is my personnal photo</span></p>
 	<p><img id="photo" src="${Context.getProperty('personalPhotoUrl')}" alt="your photo here" style="width: 128px; height: 128px; font-size:initial" /></p>
-	<p><a href="javascript:displayFileChooser();" style="color: white">Load a Picture of you</a><input id="uploadPhoto" type="file" accept="image/*" onchange="handleFiles(this.files)" style="visibility:hidden;position:absolute;top:-50;left:-50" /></p>
+	<p><a href="javascript:displayFileChooser();" style="color: white">Load a <#if Context.getProperty('personalPhotoUrl') != "">new </#if>Picture of you</a><input id="uploadPhoto" type="file" accept="image/*" onchange="handleFiles(this.files)" style="visibility:hidden;position:absolute;top:-50;left:-50" /></p>
 	<p id="selectedPhotoFile" style="font-size:smaller"></p>
 </div>
-
+<#else> <!-- check the "workflowIsRunning" property at the beginning of this file -->
 <!-- Last step -->
 <div id="lastStep" class="noDisplay">
 	<p class="infoHeader">${Document['ad:firstName']}, your application is complete.</p>
 	<p></p>
-	<p><a href="/nuxeo/nxfile/default/THE_FINAL_DOC_ID/file:content/i-129f.pdf" style="color: white">Download the PDF</a></p>
+	<p><a href="${Context.getProperty('pdfFormUrl')}" style="color: white">Download the PDF</a></p>
 </div>
+</#if>

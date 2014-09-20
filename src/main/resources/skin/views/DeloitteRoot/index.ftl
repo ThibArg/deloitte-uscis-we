@@ -12,7 +12,7 @@
 </form>
 
 <script type="text/javascript" charset="utf-8">
-	doInit('${Document.id}', '${Context.getProperty("currentUser")}');
+	doInit('${Document.id}', '${Context.getProperty("currentUser")}', <#if Context.getProperty("workflowIsRunning")>true<#else>false</#if>);
 </script>
 
 </@block>

@@ -51,11 +51,30 @@ public class DeloitteRoot extends ModuleRoot {
         DocumentModel theDoc = getApplicantDataDoc();
         // Specific values
         ctx.setProperty("personalPhotoUrl", "");
+        ctx.setProperty("workflowIsRunning", false);
+        ctx.setProperty("pdfFormUrl", "");
         if(theDoc != null) {
             if(theDoc.getPropertyValue("ad:personalPhoto") != null) {
                 ctx.setProperty("personalPhotoUrl", ctx.getServerURL() + "/nuxeo/nxfile/default/" + theDoc.getId() + "/ad:personalPhoto/");
             }
+
+            // Check if we do have at least one task
+            CoreSession session = ctx.getCoreSession();
+            String nxql = "SELECT * FROM TaskDoc WHERE ecm:currentLifeCycleState = 'opened'"
+                        + " AND nt:targetDocumentId = '" + theDoc.getId() + "'";
+            DocumentModelList docs = session.query(nxql);
+            // If not, get the latest generated form
+            if(docs.size() == 0) {
+                ctx.setProperty("workflowIsRunning", false);
+                String applicationDocId = (String) theDoc.getPropertyValue("ad:lastApplicationDocId");
+                if(applicationDocId != null && applicationDocId != "") {
+                    ctx.setProperty("pdfFormUrl", ctx.getServerURL() + "/nuxeo/nxfile/default/" + applicationDocId + "/file:content/i-129f.pdf");
+                }
+            } else {
+                ctx.setProperty("workflowIsRunning", true);
+            }
         }
+
 
         if(theDoc == null) {
             return getView("appDataNotFound");

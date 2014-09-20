@@ -10,14 +10,16 @@ var kWORKFLOW_SCHEMA_PREFIX = "var_wf_i129f",
 
 var gMainDocId = "",
 	gCurrentUser = "",
+	gWeHaveARunningWorkflow,
 	gCurrentTaskId,
 	gAllDivs,
 	gPhotoFile;
 
 // This is called when the page loads
-function doInit(docId, inUser) {
+function doInit(docId, inUser, inWorkflowIsRunning) {
 	gMainDocId = docId;
 	gCurrentUser = inUser;
+	gWeHaveARunningWorkflow = inWorkflowIsRunning;
 }
 
 jQuery(document).ready(function() {
@@ -41,39 +43,48 @@ jQuery(document).ready(function() {
 		gAllDivs[ oneDiv.id ] = jQuery(oneDiv);
 	}
 
-	// Request Nuxeo to get the current task, and handle
-	// this task (basically, show it and remove the others)
-	// No credentials needed: If we are in this page, the user is authenticated
-	nxClient = new nuxeo.Client();
-	// We just call our REST_getCurrentTaskId Automation Chain, passing it the
-	// doc id. The chain returns the current task id.
-	nxClient.operation("REST_getCurrentTaskId")
-			.context({"applicantDataDocId": gMainDocId})
-			.execute(function(inErr, inData) {
-				if(inErr) {
-					displayRestError("Get the current task", inErr);
-				} else {
-					gCurrentTaskId = JSON.parse(inData).taskId;
-					gAllDivs[gCurrentTaskId].removeClass("noDisplay");
-					// And delete all the other ones, so submiting the form => no complain
-					// about non focusable, non entered fields, etc.)
-					Object.keys(gAllDivs).forEach(function(oneKey) {
-						if(oneKey != gCurrentTaskId) {
-							gAllDivs[oneKey].remove();
-							delete gAllDivs[oneKey];
-						}
-					});
-					if(kDEBUG) {
-						var debugSpan = jQuery("#debugSpan");
-						if(debugSpan == null || debugSpan.length < 1
-							) {
-							jQuery("#uscisHeader").append("<span id='debugSpan' style='padding-left: 20px;vertical-align: super; color: yellow;'>Current task: " + gCurrentTaskId + "</span>");
-						} else {
-							debugSpan.text("Current task: " + gCurrentTaskId);
+	// We must get the divs, the tasks, etc. only if a workflow is running
+	// Else, we already are in the "lastStep" where the user can only
+	// download the pdf
+	if(gWeHaveARunningWorkflow) {
+
+		// Request Nuxeo to get the current task, and handle
+		// this task (basically, show it and remove the others)
+		// No credentials needed: If we are in this page, the user is authenticated
+		nxClient = new nuxeo.Client();
+		// We just call our REST_getCurrentTaskId Automation Chain, passing it the
+		// doc id. The chain returns the current task id.
+		nxClient.operation("REST_getCurrentTaskId")
+				.context({"applicantDataDocId": gMainDocId})
+				.execute(function(inErr, inData) {
+					if(inErr) {
+						displayRestError("Get the current task", inErr);
+					} else {
+						gCurrentTaskId = JSON.parse(inData).taskId;
+						gAllDivs[gCurrentTaskId].removeClass("noDisplay");
+						// And delete all the other ones, so submiting the form => no complain
+						// about non focusable, non entered fields, etc.)
+						Object.keys(gAllDivs).forEach(function(oneKey) {
+							if(oneKey != gCurrentTaskId) {
+								gAllDivs[oneKey].remove();
+								delete gAllDivs[oneKey];
+							}
+						});
+						if(kDEBUG) {
+							var debugSpan = jQuery("#debugSpan");
+							if(debugSpan == null || debugSpan.length < 1
+								) {
+								jQuery("#uscisHeader").append("<span id='debugSpan' style='padding-left: 20px;vertical-align: super; color: yellow;'>Current task: " + gCurrentTaskId + "</span>");
+							} else {
+								debugSpan.text("Current task: " + gCurrentTaskId);
+							}
 						}
 					}
-				}
-			});
+				});
+	} else { // if(gWeHaveARunningWorkflow) 
+		jQuery("#nextStepButton").remove();
+		jQuery("#lastStep").removeClass("noDisplay");
+	}
 });
 
 function completeTask(inWFVariables) {
@@ -85,6 +96,7 @@ function completeTask(inWFVariables) {
 						"taskId": gCurrentTaskId,
 						"wfValues": inWFVariables})
 			.execute(function(inErr, inData) {
+				var result;
 				if(inErr) {
 					displayRestError("Complete the current task", inErr);
 				} else {
@@ -136,7 +148,7 @@ function batchFinished(batchId) {
 				if(inErr) {
 					displayRestError("Save picture in applicant data", inErr);
 				} else {
-					// MOVE TO NEXT STEP
+					completeTask({});
 				}
 			});
 }
@@ -181,7 +193,7 @@ function submitPhoto() {
 		if(jQuery("#photo").attr("src") == "") {
 			alert("Please, upload a photo");
 		} else {
-			alert("all good");
+			completeTask({});
 		}
 	}
 }
