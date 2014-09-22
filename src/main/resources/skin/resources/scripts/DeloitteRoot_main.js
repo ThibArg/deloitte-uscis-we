@@ -124,70 +124,34 @@ function displayRestError(inContextLabel, inTheErr) {
 	// Should add something to let the user relod or test something else...
 }
 
-/*
-function bsc(batchId) {
-	console.log("batchStartedCallback " + batchId);
-}
-*/
-function batchFinished(batchId) {
-	console.log("batchFinishedCallback " + batchId);
-	var theData, nxClient;
-
-	theData = {
-		"entity-type": "document",
-		"properties": {
-			"ad:personalPhoto": {
-					"upload-batch": batchId,
-					"upload-fileId": "0"
-			}
-		}
-	};
-	nxClient = new nuxeo.Client({timeout: 10000});
-	nxClient.request("id/" + gMainDocId)
-			.put({data: theData}, function(inErr, inData) {
-				if(inErr) {
-					displayRestError("Save picture in applicant data", inErr);
-				} else {
-					completeTask({});
-				}
-			});
-}
-/*
-function usc(fileIndex, file) {
-	console.log("uploadStartedCallback " + fileIndex + " ••• " + file);
-}
-function ufc(fileIndex, file, time) {
-	console.log("uploadFinishedCallback " + fileIndex + " ••• " + file);
-}
-function upc(fileIndex, file, newProgress) {
-	console.log("uploadProgressUpdatedCallback " + fileIndex + " ••• " + file + " ••• " + newProgress);
-}
-function suc(fileIndex, file, speed) {
-	console.log("uploadSpeedUpdatedCallback " + fileIndex + " ••• " + file + " ••• " + speed);
-}
-*/
-
 function submitPhoto() {
-	var nxClient, batchId, xhr;
+	var nxClient, updateDocOpAndUploader;
 	if(gPhotoFile instanceof File) {
 		
 		nxClient = new nuxeo.Client({timeout: 10000});
-		// Using operation("automation") is a big crados hack to fix the fact that the uploader
-		// builds a bad URL: /site/batch/upload, instead of /site/automation/batch/upload
-		// (missing "/automation" in the path). So, because the code concat the operation
-		// name in the path, well, we just used the missing value.
-		nxClient.operation("automation")
-				.uploader({
-					directUpload: true,
-					batchFinishedCallback: batchFinished
-				})
-				.uploadFile(gPhotoFile, function(inErr, inDada) {
+		updateDocOpAndUploader = nxClient.operation("Blob.Attach")
+									.params({
+										document: gMainDocId,
+										save : true,
+										xpath: "ad:personalPhoto"
+									})
+									.uploader();
+		updateDocOpAndUploader.uploadFile(
+				gPhotoFile,
+				function(inErr, inDada) {
 					if(inErr) {
 						displayRestError("Upload file", inErr);
 					} else {
-						// Unused. We use the batchFinished callback
+						updateDocOpAndUploader.execute(function(inErr, inData) {
+							if(inErr) {
+								displayRestError("Attach the photo to the application", inErr);
+							} else {
+								completeTask({});
+							}
+						});
 					}
-				});
+				}
+			);
 
 	} else {
 		if(jQuery("#photo").attr("src") == "") {
