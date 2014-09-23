@@ -1,3 +1,7 @@
+***
+**I'm using GitHub just as backup**: This project will be removed from here sooner or later.
+***
+
 ```
 cd /path/t/roject
 mvn install
